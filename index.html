@@ -1,0 +1,147 @@
+<html><head><base href="https://websim.warehouse.app/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>點倉易</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .btn:hover {
+    background-color: #45a049;
+  }
+  #reader {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  #scannedContent, #quantity, #recordList {
+    margin-top: 20px;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    box-sizing: border-box;
+  }
+  #recordList {
+    border: 1px solid #ddd;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>點倉易</h1>
+    <div>
+      <button class="btn" onclick="showPage('scanning')">點貨</button>
+      <button class="btn" onclick="showPage('verification')">核對</button>
+    </div>
+    
+    <div id="scanningPage" style="display:none;">
+      <div id="reader"></div>
+      <div id="scannedContent"></div>
+      <input type="number" id="quantity" placeholder="輸入數量" min="1">
+      <button class="btn" onclick="confirmScan()">確定</button>
+      <div id="recordList"></div>
+      <button class="btn" onclick="uploadRecords()">上載記錄</button>
+    </div>
+    
+    <div id="verificationPage" style="display:none;">
+      <h2>核對頁面</h2>
+      <p>此頁面正在開發中...</p>
+    </div>
+  </div>
+
+  <script>
+    let records = [];
+    let html5QrCode;
+
+    function showPage(page) {
+      document.getElementById('scanningPage').style.display = page === 'scanning' ? 'block' : 'none';
+      document.getElementById('verificationPage').style.display = page === 'verification' ? 'block' : 'none';
+      
+      if (page === 'scanning' && !html5QrCode) {
+        initializeScanner();
+      }
+    }
+
+    function initializeScanner() {
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        onScanSuccess,
+        onScanFailure
+      );
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById('scannedContent').innerHTML = `掃描結果: ${decodedText}`;
+    }
+
+    function onScanFailure(error) {
+      console.warn(`QR Code scanning failure: ${error}`);
+    }
+
+    function confirmScan() {
+      const content = document.getElementById('scannedContent').innerText.replace('掃描結果: ', '');
+      const quantity = document.getElementById('quantity').value;
+      
+      if (content && quantity) {
+        records.push({ content, quantity });
+        updateRecordList();
+        document.getElementById('quantity').value = '';
+      } else {
+        alert('請確保已掃描二維碼並輸入數量');
+      }
+    }
+
+    function updateRecordList() {
+      const recordList = document.getElementById('recordList');
+      recordList.innerHTML = '<h3>記錄列表：</h3>';
+      records.forEach((record, index) => {
+        recordList.innerHTML += `<p>${index + 1}. 內容: ${record.content}, 數量: ${record.quantity}</p>`;
+      });
+    }
+
+    function uploadRecords() {
+      console.log('上載記錄:', records);
+      alert('記錄已上載！');
+      records = [];
+      updateRecordList();
+    }
+  </script>
+</body>
+</html>
